@@ -35,10 +35,11 @@ This project analyzes Microsoft security incident logs to identify **high-risk u
 
 ## Tools Used
 
-- Kaggle Dataset: Microsoft Security Incident Prediction
 - ![SQL](https://img.shields.io/badge/SQL-Blue?style=flat-square)
+- ![BigQuery](https://img.shields.io/badge/BigQuery-LightBlue?style=flat-square)
 - ![Excel](https://img.shields.io/badge/Excel-Green?style=flat-square)
 - ![Tableau](https://img.shields.io/badge/Tableau-LightBlue?style=flat-square)
+- ![Kaggle](https://img.shields.io/badge/Kaggle-Blue?style=flat-square)
 - ![GitHub](https://img.shields.io/badge/GitHub-Black?style=flat-square)
 
 ---
