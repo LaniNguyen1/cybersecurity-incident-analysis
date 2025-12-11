@@ -23,8 +23,11 @@ This project analyzes Microsoft security incident logs to identify **high-risk u
 ## Repository Structure
 
 /1_sql   → Data cleaning & analysis queries
+
 /2_data   → Cleaned datasets & Tableau CSVs
+
 /3_visualizations   → Dashboard screenshots
+
 /4_paper   → Final project report
 
 
@@ -33,7 +36,6 @@ This project analyzes Microsoft security incident logs to identify **high-risk u
 ## Tools Used
 
 - Kaggle Dataset: Microsoft Security Incident Prediction
-<!-- Badges -->
 - ![SQL](https://img.shields.io/badge/SQL-Blue?style=flat-square)
 - ![Excel](https://img.shields.io/badge/Excel-Green?style=flat-square)
 - ![Tableau](https://img.shields.io/badge/Tableau-LightBlue?style=flat-square)
