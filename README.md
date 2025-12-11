@@ -1,7 +1,6 @@
 # cybersecurity-incident-analysis
 Analyzing Security Incident Logs to Detect Potential Cyber Threats
-This project analyzes Microsoft security incident logs to identify high-risk user accounts, organizational vulnerabilities, off-hours anomalies, and MITRE ATT&CK techniques associated with severe alerts. 
-Using SQL for data transformation, Excel for exploration, and Tableau for visualization, the project highlights indicators of compromise and gaps in incident response.
+This project analyzes Microsoft security incident logs to identify high-risk user accounts, organizational vulnerabilities, off-hours anomalies, and MITRE ATT&CK techniques associated with severe alerts. Using SQL for data transformation, Excel for exploration, and Tableau for visualization, the project highlights indicators of compromise and gaps in incident response.
 
 Dashboard 1 — High Risk Account Overview
 * Top accounts generating high-severity alerts
