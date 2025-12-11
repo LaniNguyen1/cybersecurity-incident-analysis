@@ -1,44 +1,61 @@
-# cybersecurity-incident-analysis
-ANALYZING SECURITY INCIDENT LOGS TO DETECT POTENTIAL CYBER THREATS
+# Analyzing Security Incident Logs to Detect Potential Cyber Threats
 
-This project analyzes Microsoft security incident logs to identify high-risk user accounts, organizational vulnerabilities, off-hours anomalies, and MITRE ATT&CK techniques associated with severe alerts. Using SQL for data transformation, Excel for exploration, and Tableau for visualization, the project highlights indicators of compromise and gaps in incident response.
+This project analyzes Microsoft security incident logs to identify **high-risk user accounts, organizational vulnerabilities, off-hours anomalies, and MITRE ATT&CK techniques associated with severe alerts**. Using **SQL** for data transformation, **Excel** for exploration, and **Tableau** for visualization, the project highlights **indicators of compromise and gaps in incident response**.
 
-DASHBOARD 1 — High Risk Account Overview
-* Top accounts generating high-severity alerts
-* Unresolved alerts by organization
-* Off-hours access anomalies
-* Average time between alerts
+---
 
-DASHBOARD 2 — MITRE ATT&CK Behavior Analysis
-* Most frequent attack categories
-* Highest-risk MITRE techniques by organization
-* Accounts tied to specific techniques
-* Most severe attack categories
+## Dashboards
 
-REPOSITORY STRUCTURE
+**Dashboard 1 — High Risk Account Overview**  
+- Top accounts generating high-severity alerts  
+- Unresolved alerts by organization  
+- Off-hours access anomalies  
+- Average time between alerts  
 
-/sql   → Data cleaning & analysis queries  
-/data   → Cleaned datasets & Tableau CSVs  
-/visualizations   → Dashboard screenshots  
-/paper   → Final project report  
+**Dashboard 2 — MITRE ATT&CK Behavior Analysis**  
+- Most frequent attack categories  
+- Highest-risk MITRE techniques by organization  
+- Accounts tied to specific techniques  
+- Most severe attack categories  
 
-TOOLS USED
-* SQL (BigQuery syntax)
-* Excel
-* Tableau
-* GitHub
-* Kaggle Dataset: Microsoft Security Incident Prediction
+---
 
-KEY INSIGHTS (Short Version)
-* One account (673934) generated an abnormally high volume of high-severity alerts at near-instant intervals.
-* Orgs 738, 73, and 116 show clusters of unresolved ransomware, phishing, and execution-based attacks.
-* Off-hours access patterns suggest automated activity or malware beaconing.
-* MITRE techniques such as T1486 (Ransomware), T1566.002 (Phishing), and T1059.001 (PowerShell) appeared repeatedly across high-risk organizations.
+## Repository Structure
+
+/1_sql   → Data cleaning & analysis queries
+/2_data   → Cleaned datasets & Tableau CSVs
+/3_visualizations   → Dashboard screenshots
+/4_paper   → Final project report
+
+
+---
+
+## Tools Used
+
+- Kaggle Dataset: Microsoft Security Incident Prediction
+<!-- Badges -->
+- ![SQL](https://img.shields.io/badge/SQL-Blue?style=flat-square)
+- ![Excel](https://img.shields.io/badge/Excel-Green?style=flat-square)
+- ![Tableau](https://img.shields.io/badge/Tableau-LightBlue?style=flat-square)
+- ![GitHub](https://img.shields.io/badge/GitHub-Black?style=flat-square)
+
+---
+
+## Key Insights (Short Version)
+
+- One account (673934) generated an **abnormally high volume of high-severity alerts at near-instant intervals**.  
+- Organizations 738, 73, and 116 show clusters of **unresolved ransomware, phishing, and execution-based attacks**.  
+- Off-hours access patterns suggest **automated activity or malware beaconing**.  
+- MITRE techniques such as **T1486 (Ransomware), T1566.002 (Phishing), and T1059.001 (PowerShell)** appeared repeatedly across high-risk organizations.  
+
 Full details are in the final report.
 
-REPORT
-The full capstone report is available in:
+---
 
-/paper/security_capstone_report.pdf
+## Full Report
 
-It includes methodology, research questions, findings, dashboards, and recommendations.
+The complete capstone report is available here:  
+
+/4_paper/security_capstone_report.pdf
+
+It includes **methodology, research questions, findings, dashboards, and recommendations**.
