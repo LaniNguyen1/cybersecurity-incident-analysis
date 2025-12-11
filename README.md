@@ -8,6 +8,7 @@ DASHBOARD 1 — High Risk Account Overview
 * Unresolved alerts by organization
 * Off-hours access anomalies
 * Average time between alerts
+
 DASHBOARD 2 — MITRE ATT&CK Behavior Analysis
 * Most frequent attack categories
 * Highest-risk MITRE techniques by organization
@@ -16,10 +17,10 @@ DASHBOARD 2 — MITRE ATT&CK Behavior Analysis
 
 REPOSITORY STRUCTURE
 
-/sql → Data cleaning & analysis queries  
-/data → Cleaned datasets & Tableau CSVs  
-/visualizations → Dashboard screenshots  
-/paper → Final project report  
+/sql   → Data cleaning & analysis queries  
+/data   → Cleaned datasets & Tableau CSVs  
+/visualizations   → Dashboard screenshots  
+/paper   → Final project report  
 
 TOOLS USED
 * SQL (BigQuery syntax)
