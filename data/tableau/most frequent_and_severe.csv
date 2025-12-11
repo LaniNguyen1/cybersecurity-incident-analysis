@@ -1,0 +1,13 @@
+Type,Category,Metric,Value
+Most Frequent,Impact,Total Attacks,369024085
+Most Frequent,Impact,Unresolved Count,369024085
+Most Frequent,InitialAccess,Total Attacks,173389713
+Most Frequent,InitialAccess,Unresolved Count,163596141
+Most Frequent,Discovery,Total Attacks,118583898
+Most Frequent,Discovery,Unresolved Count,118351753
+Most Severe,Impact,Total Attacks,369024085
+Most Severe,Impact,Unresolved Count,369024085
+Most Severe,Exfiltration,Total Attacks,23308539
+Most Severe,Exfiltration,Unresolved Count,23300879
+Most Severe,Ransomware,Total Attacks,290690
+Most Severe,Ransomware,Unresolved Count,135648
