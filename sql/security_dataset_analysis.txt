@@ -1,0 +1,474 @@
+/* ============================================================
+   QUESTION 1 — Which user accounts have triggered more than 3 high-severity incidents in a single week?
+   ============================================================ */
+
+SELECT
+  AccountUpn,
+  COUNT(*) AS High_Severity_Count
+FROM
+  `projects-111111.microsoft_security.training_lastweek`
+WHERE
+  IncidentGrade = 'TruePositive'
+  AND Category IN (
+    'CommandAndControl',
+    'CredentialAccess',
+    'CredentialStealing',
+    'DefenseEvasion',
+    'Execution',
+    'Exfiltration',
+    'Impact',
+    'InitalAccess',
+    'LateralMovement',
+    'Malware',
+    'Persistence',
+    'PrivilegeEscalation',
+    'Ransomware',
+    'SuspiciousActivity'
+  )
+GROUP BY
+  AccountUpn
+HAVING
+  COUNT(*) > 3
+ORDER BY
+  High_Severity_Count DESC
+LIMIT 3;
+
+/* ============================================================
+   QUESTION 2 — What is the average time between consecutive alerts for each user account, and how does this vary by?
+   ============================================================ */
+
+-- Note: I deleted AlertID earlier, so I rebuilt a clean table by joining back to the version that still had AlertID.
+
+CREATE TABLE `projects-111111.microsoft_security.training_3months_new` AS
+SELECT
+  c.OrgId,
+  c.Timestamp,
+  c.AccountUpn,
+  r.AlertID,
+  c.Category,
+  c.EvidenceRole,
+  c.Roles,
+  c.MitreTechniques,
+  c.SuspicionLevel,
+  c.ThreatFamily,
+  c.IncidentGrade,
+  c.ActionGranular_Cleaned,
+  c.LastVerdict
+FROM
+  `projects-111111.microsoft_security.training_3months` AS c
+JOIN
+  `projects-111111.microsoft_security.training_row` AS r
+ON
+  c.AccountUpn = r.AccountUpn
+  AND c.Category = r.Category
+  AND TIMESTAMP(c.Timestamp) = r.Timestamp
+WHERE
+  r.AlertID IS NOT NULL
+ORDER BY
+  c.OrgId,
+  c.Timestamp,
+  c.AccountUpn,
+  r.AlertID,
+  c.Category,
+  c.EvidenceRole,
+  c.Roles,
+  c.MitreTechniques,
+  c.SuspicionLevel,
+  c.ThreatFamily,
+  c.IncidentGrade,
+  c.ActionGranular_Cleaned,
+  c.LastVerdict;
+
+
+-- Find the 3 most frequent category attacks (returned: Impact, InitialAccess, Discovery).
+
+SELECT
+  Category,
+  COUNT(*) AS Alert_Count
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+GROUP BY
+  Category
+ORDER BY
+  Alert_Count DESC
+LIMIT 3;
+
+
+-- Using the top 3 most frequent categories, find the AccountUpn with the most alerts in that category, then get the average seconds between alerts.
+
+WITH TimeDiffs AS (
+  SELECT
+    AccountUpn,
+    Category,
+    TIMESTAMP_DIFF(
+      LEAD(TIMESTAMP(Timestamp)) OVER (
+        PARTITION BY AccountUpn, Category
+        ORDER BY TIMESTAMP(Timestamp)
+      ),
+      TIMESTAMP(Timestamp),
+      SECOND
+    ) AS Seconds_Between_Alerts
+  FROM
+    `projects-111111.microsoft_security.training_3months_new`
+  WHERE
+    Category IN ('Impact', 'InitialAccess', 'Discovery')
+)
+SELECT
+  AccountUpn,
+  Category,
+  COUNT(*) + 1 AS Alert_Count,  -- +1 to count current alert since LEAD skips the last row
+  AVG(Seconds_Between_Alerts) AS Avg_Seconds_Between_Alerts
+FROM
+  TimeDiffs
+WHERE
+  Seconds_Between_Alerts IS NOT NULL
+GROUP BY
+  AccountUpn,
+  Category
+ORDER BY
+  Alert_Count DESC,
+  Avg_Seconds_Between_Alerts
+LIMIT 6;
+
+
+/* ============================================================
+   QUESTION 3 — Which organizations generate the highest volume of unresolved medium-to-high alerts, and what controls can be strengthened there?
+   ============================================================ */
+
+-- Find the organizations with the highest number of unresolved alerts.
+
+SELECT
+  OrgId,
+  COUNT(*) AS Unresolved_Count
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+WHERE
+  IncidentGrade IS NULL
+  AND SuspicionLevel IS NOT NULL
+  AND Category IN (
+    'Ransomware',
+    'Impact',
+    'Exfiltration',
+    'CommandAndControl',
+    'PrivilegeEscalation',
+    'LateralMovement',
+    'Execution',
+    'CredentialStealing',
+    'CredentialAccess',
+    'InitialAccess',
+    'Persistence',
+    'DefenseEvasion',
+    'Malware',
+    'SuspiciousActivity'
+  )
+GROUP BY
+  OrgId
+ORDER BY
+  Unresolved_Count DESC
+LIMIT 3;
+
+
+-- For one of the top organizations (example: OrgId = 738), find the top unresolved alert categories.
+
+SELECT
+  Category,
+  COUNT(*) AS Unresolved_Alerts
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+WHERE
+  OrgId = 738
+  AND IncidentGrade IS NULL
+  AND SuspicionLevel IS NOT NULL
+  AND Category IN (
+    'Ransomware',
+    'Impact',
+    'Exfiltration',
+    'CommandAndControl',
+    'PrivilegeEscalation',
+    'LateralMovement',
+    'Execution',
+    'CredentialStealing',
+    'CredentialAccess',
+    'InitialAccess',
+    'Persistence',
+    'DefenseEvasion',
+    'Malware',
+    'SuspiciousActivity'
+  )
+GROUP BY
+  Category
+ORDER BY
+  Unresolved_Alerts DESC
+LIMIT 3;
+
+-- Note: I also checked unresolved actions (ActionGranular_Cleaned) for major orgs and found that top orgs still mark alerts as suspicious/incriminated but leave them unresolved.
+
+/* ============================================================
+   QUESTION 4 — How many incidents in the last 3 months involve access attempts outside normal working hours (6PM- 6AM), and how often do those lead to escalation?
+   ============================================================ */
+
+-- First, see all access attempts outside normal working hours.
+
+SELECT
+  AccountUpn,
+  COUNT(*) AS OffHours_Attempts
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+WHERE
+  (EXTRACT(HOUR FROM Timestamp) < 6
+   OR EXTRACT(HOUR FROM Timestamp) >= 18)
+  AND EvidenceRole = 'Impacted'
+GROUP BY
+  AccountUpn
+ORDER BY
+  OffHours_Attempts DESC;
+
+
+-- Then, for selected accounts with most off-hours attempts, see high-risk patterns and escalation.
+
+SELECT
+  AccountUpn,
+  COUNT(*) AS Total_OffHours_Attempts,
+  -- Suspicion Levels
+  COUNTIF(SuspicionLevel = 'Suspicious') AS Suspicious_SuspicionLevel,
+  COUNTIF(SuspicionLevel = 'Incriminated') AS Incriminated_SuspicionLevel,
+  -- Roles
+  COUNTIF(Roles = 'Attacked') AS Attacked_Roles,
+  COUNTIF(Roles = 'Compromised') AS Compromised_Roles,
+  COUNTIF(Roles = 'PolicyViolator') AS PolicyViolator_Roles,
+  COUNTIF(Roles = 'Suspicious') AS Suspicious_Roles,
+  -- Last Verdicts
+  COUNTIF(LastVerdict = 'Suspicious') AS Suspicious_LastVerdict,
+  COUNTIF(LastVerdict = 'Malicious') AS Malicious_LastVerdict,
+  COUNTIF(LastVerdict = 'NoThreatsFound') AS NoThreats_LastVerdict,
+  COUNTIF(LastVerdict IS NULL) AS Unresolved_LastVerdict
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+WHERE
+  (EXTRACT(HOUR FROM Timestamp) < 6
+   OR EXTRACT(HOUR FROM Timestamp) >= 18)
+  AND EvidenceRole = 'Impacted'
+  AND AccountUpn IN (673934, 3, 4)
+GROUP BY
+  AccountUpn
+ORDER BY
+  Total_OffHours_Attempts DESC
+LIMIT 3;
+
+/* ============================================================
+   QUESTION 5 — Which types of attacks are most frequent, and how do their incident severities and resolutions correlate over the last 3 months? ?
+   ============================================================ */
+
+-- Find the most frequent types of attacks and break down by incident grades, actions, and last verdicts.
+
+SELECT
+  Category,
+  COUNT(*) AS Attack_Count,
+  COUNT(MitreTechniques) AS Technique_Count,
+  COUNTIF(IncidentGrade = 'TruePositive') AS True_Positive_Count,
+  COUNTIF(IncidentGrade = 'FalsePositive') AS False_Positive_Count,
+  COUNTIF(IncidentGrade = 'BenignPositive') AS Benign_Positive_Count,
+  COUNTIF(IncidentGrade IS NULL) AS Unresolved_Grade_Count,
+  -- Grouped by severity types
+  COUNTIF(ActionGranular_Cleaned IN ('ResettedUserPassword', 'ChangedUserPassword', 'UpdatedTokenTimestamp'))
+    AS Low_Severity_Action,
+  COUNTIF(ActionGranular_Cleaned IN ('ConfirmedUserCompromised', 'SuspendedUser', 'IsolatedResponse'))
+    AS High_Severity_Action,
+  COUNTIF(ActionGranular_Cleaned IS NULL) AS No_Action_Taken,
+  -- Grouped by resolutions
+  COUNTIF(LastVerdict = 'Malicious') AS Malicious_LastVerdict,
+  COUNTIF(LastVerdict = 'Suspicious') AS Suspicious_LastVerdict,
+  COUNTIF(LastVerdict = 'NoThreatsFound') AS NoThreats_LastVerdict,
+  COUNTIF(LastVerdict IS NULL) AS Unresolved_LastVerdict
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+GROUP BY
+  Category
+ORDER BY
+  Attack_Count DESC
+LIMIT 3;
+
+-- Same query, restricted to high-severity categories only.
+
+SELECT
+  Category,
+  COUNT(*) AS Attack_Count,
+  COUNT(MitreTechniques) AS Technique_Count,
+  COUNTIF(IncidentGrade = 'TruePositive') AS True_Positive_Count,
+  COUNTIF(IncidentGrade = 'FalsePositive') AS False_Positive_Count,
+  COUNTIF(IncidentGrade = 'BenignPositive') AS Benign_Positive_Count,
+  COUNTIF(IncidentGrade IS NULL) AS Unresolved_Grade_Count,
+  COUNTIF(ActionGranular_Cleaned IN ('ResettedUserPassword', 'ChangedUserPassword', 'UpdatedTokenTimestamp'))
+    AS Low_Severity_Action,
+  COUNTIF(ActionGranular_Cleaned IN ('ConfirmedUserCompromised', 'SuspendedUser', 'IsolatedResponse'))
+    AS High_Severity_Action,
+  COUNTIF(ActionGranular_Cleaned IS NULL) AS No_Action_Taken,
+  COUNTIF(LastVerdict = 'Malicious') AS Malicious_LastVerdict,
+  COUNTIF(LastVerdict = 'Suspicious') AS Suspicious_LastVerdict,
+  COUNTIF(LastVerdict = 'NoThreatsFound') AS NoThreats_LastVerdict,
+  COUNTIF(LastVerdict IS NULL) AS Unresolved_LastVerdict
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+WHERE
+  Category IN ('Ransomware', 'Impact', 'Exfiltration')
+GROUP BY
+  Category
+ORDER BY
+  Attack_Count DESC;
+
+
+-- Use a CTE to find top MitreTechniques per relevant category (Impact, InitialAccess, Discovery, etc.)
+
+WITH TechniqueCounts AS (
+  SELECT
+    Category,
+    MitreTechniques,
+    COUNT(*) AS Technique_Count,
+    ROW_NUMBER() OVER (
+      PARTITION BY Category
+      ORDER BY COUNT(*) DESC
+    ) AS rn
+  FROM
+    `projects-111111.microsoft_security.training_3months_new`
+  WHERE
+    MitreTechniques IS NOT NULL
+    AND Category IN (
+      'Impact',
+      'InitialAccess',
+      'Discovery',
+      'Exfiltration',
+      'Ransomware',
+      'CredentialStealing',
+      'WebExploit',
+      'Weaponization'
+    )
+  GROUP BY
+    Category,
+    MitreTechniques
+)
+SELECT
+  Category,
+  MitreTechniques,
+  Technique_Count
+FROM
+  TechniqueCounts
+WHERE
+  rn <= 1
+ORDER BY
+  Technique_Count DESC;
+
+/* ============================================================
+   ADDITIONAL ANALYSIS — For mitigations and MITRE Techniques
+   ============================================================ */
+
+-- Top 3 MitreTechniques for a specific high-alert account (example: AccountUpn = 673934).
+
+SELECT
+  MitreTechniques,
+  COUNT(*) AS MostMitre
+FROM
+  `projects-111111.microsoft_security.training_3months_new`
+WHERE
+  AccountUpn = 673934
+  AND MitreTechniques IS NOT NULL
+GROUP BY
+  MitreTechniques
+ORDER BY
+  MostMitre DESC
+LIMIT 3;
+
+
+-- For those MitreTechniques, find threat families and entity types across organizations for the account.
+
+SELECT
+  AccountUpn,
+  OrgId,
+  Category,
+  MitreTechniques,
+  ThreatFamily,
+  EntityType,
+  COUNT(OrgId) AS Total_Orgs
+FROM
+  `projects-111111.microsoft_security.training`
+WHERE
+  AccountUpn = 673934
+  AND MitreTechniques = 'T1087;T1087.002'
+GROUP BY
+  OrgId,
+  AccountUpn,
+  Category,
+  MitreTechniques,
+  ThreatFamily,
+  EntityType
+ORDER BY
+  Total_Orgs DESC
+LIMIT 1;
+
+
+-- For a specific organization (example: OrgId = 73), find the account with the most triggers of a specific MITRE technique.
+
+SELECT
+  OrgId,
+  AccountUpn,
+  Category,
+  MitreTechniques,
+  ThreatFamily,
+  EntityType,
+  COUNT(AccountUpn) AS Most_Accounts
+FROM
+  `projects-111111.microsoft_security.training`
+WHERE
+  OrgId = 73
+  AND MitreTechniques = 'T1566.002'
+GROUP BY
+  OrgId,
+  AccountUpn,
+  Category,
+  MitreTechniques,
+  ThreatFamily,
+  EntityType
+ORDER BY
+  Most_Accounts DESC
+LIMIT 1;
+
+
+-- See which accounts have the most distinct threat families.
+
+SELECT
+  AccountUpn,
+  COUNT(DISTINCT ThreatFamily) AS ThreatFamily_Count
+FROM
+  `projects-111111.microsoft_security.training`
+WHERE
+  ThreatFamily IS NOT NULL
+GROUP BY
+  AccountUpn
+ORDER BY
+  ThreatFamily_Count DESC;
+
+
+-- For a given account, see which threat families and Mitre techniques appear most often by organization.
+
+SELECT
+  OrgId,
+  AccountUpn,
+  Category,
+  ThreatFamily,
+  MitreTechniques,
+  COUNT(ThreatFamily) AS Total_Threats
+FROM
+  `projects-111111.microsoft_security.training`
+WHERE
+  ThreatFamily IS NOT NULL
+  AND MitreTechniques IS NOT NULL
+  AND AccountUpn = 673934
+GROUP BY
+  OrgId,
+  AccountUpn,
+  Category,
+  ThreatFamily,
+  MitreTechniques
+ORDER BY
+  Total_Threats DESC;
+
+-- Note: It looks like AccountUpn 673934 is the only account with non-null ThreatFamily values in the dataset, which shaped my mitigation research.
