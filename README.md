@@ -28,7 +28,7 @@ This project analyzes Microsoft security incident logs to identify **high-risk u
 
 /3_visualizations   → Dashboard screenshots
 
-/4_paper   → Final project report
+/4_deliverables   → Final project report and presentation
 
 ---
 
@@ -64,6 +64,6 @@ Full details are in the final report.
 
 The complete capstone report is available here:  
 
-/4_paper/security_capstone_report.pdf
+/4_deliverables/security_capstone_report.pdf
 
 It includes **methodology, research questions, findings, dashboards, and recommendations**.
